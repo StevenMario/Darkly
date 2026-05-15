@@ -2,49 +2,49 @@
 
 ## Definition
 
-Path Traversal (ou Directory Traversal) est une vulnérabilité web qui permet à un attaquant de lire des fichiers situés en dehors du répertoire prévu par l’application, en manipulant les chemins de fichiers avec des séquences `../`.
+Path Traversal (also called Directory Traversal) is a web vulnerability that allows an attacker to read files outside the directory intended by the application by manipulating file paths using `../` sequences.
 
 ---
 
-## How it works
+## How It Works
 
-Une application vulnérable utilise une entrée utilisateur pour construire un chemin de fichier sans validation correcte.
+A vulnerable application uses user input to construct a file path without properly validating it.
 
-### Exemple normal
+### Normal Example
 
 ```http
 http://site.com/?file=document.pdf
 ```
 
-Le serveur lit :
+The server reads:
 
 ```bash
 /var/www/files/document.pdf
 ```
 
-### Exemple d’attaque
+### Attack Example
 
-L’attaquant remplace le nom du fichier par des séquences `../` pour remonter dans l’arborescence :
+An attacker replaces the file name with `../` sequences to move up the directory tree:
 
 ```http
 http://site.com/?file=../../../etc/passwd
 ```
 
-Le serveur lit alors :
+The server then reads:
 
 ```bash
 /etc/passwd
 ```
 
-Ce fichier est sensible sur les systèmes Linux.
+This is a sensitive file on Linux systems.
 
 ---
 
-## Stages of operation
+## Stages of Operation
 
-### 1. Rechercher les paramètres vulnérables
+### 1. Identify Vulnerable Parameters
 
-Chercher des paramètres qui chargent des fichiers :
+Look for parameters that load files, such as:
 
 - `?file=`
 - `?page=`
@@ -53,28 +53,28 @@ Chercher des paramètres qui chargent des fichiers :
 
 ---
 
-### 2. Cibler `/etc/passwd`
+### 2. Target `/etc/passwd`
 
-Pourquoi ce fichier ?
+Why target this file?
 
-- Présent sur presque tous les systèmes Linux
-- Lisible sans privilèges élevés
-- Son contenu est facilement reconnaissable
-- Permet d’identifier des noms d’utilisateurs utiles pour d’autres attaques
+- It exists on almost all Linux systems
+- It is readable without special privileges
+- Its content is easily recognizable
+- It reveals usernames useful for further attacks
 
 ---
 
-### 3. Tester la vulnérabilité
+### 3. Test the Vulnerability
 
 ```http
 http://IP/?page=../../../../../../../../etc/passwd
 ```
 
-Si le contenu du fichier apparaît, la vulnérabilité est confirmée.
+If the content of the file is displayed, the vulnerability is confirmed.
 
 ---
 
-## Example output
+## Example Output
 
 ```txt
 root:x:0:0:root:/root:/bin/bash
@@ -86,13 +86,13 @@ user:x:1000:1000:user:/home/user:/bin/bash
 
 ## Mitigation
 
-Pour se protéger contre le Path Traversal :
+To protect against Path Traversal vulnerabilities:
 
-- Valider les entrées utilisateur
-- Utiliser des listes blanches de fichiers autorisés
-- Désactiver l’accès direct aux fichiers sensibles
-- Utiliser des chemins absolus sécurisés
-- Éviter l’utilisation directe des entrées utilisateur dans les chemins
+- Validate and sanitize user input
+- Use a whitelist of allowed files
+- Prevent direct access to sensitive files
+- Use secure absolute paths
+- Avoid using user input directly in file paths
 
 ---
 
