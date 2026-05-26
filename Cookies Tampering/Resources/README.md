@@ -58,19 +58,19 @@ An attacker tampers with cookies to gain unauthorized access:
 6. Attacker successfully escalates privileges and accesses admin panel
 ```
 
-**Attack Variations:**
-- **Privilege Escalation**: Changing `role=user` to `role=admin`
-- **Session Hijacking**: Stealing and modifying valid session IDs
-- **User Impersonation**: Changing `userid=123` to `userid=999`
-- **Bypassing Authentication**: Setting `loggedIn=true` when it should be false
+## Stage of Operation
 
-## Prevention
+### 1. Identify a Vulnerable Cookie with Browser Tools
 
-To prevent cookies tampering:
-- Use **HttpOnly** flag to prevent JavaScript access
-- Use **Secure** flag to transmit only over HTTPS
-- Use **SameSite** flag to prevent CSRF attacks
-- **Validate** all cookie data server-side, never trust client-side data
-- Use **signed/encrypted** cookies with server-side secrets
-- Implement **strong session management** with server-side storage
-- Use **cryptographic signatures** to detect tampering
+- Go to the sign-in page
+- Open browser DevTools with F12
+- Check the Cookies section and look for suspicious values
+- Example: `I_am_admin=68934a3e9455fa72420237eb05902327`
+
+### 2. Exploit the Vulnerability
+
+- Recognize that the cookie is an MD5 hash of the string `false`
+- Generate an MD5 hash of the string `true`: `b326b5062b2f0e69046810717534cb09`
+- Go to Application → Cookies in DevTools
+- Replace the cookie value with the new hash
+- Reload the page to apply changes
