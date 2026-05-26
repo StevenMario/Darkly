@@ -74,3 +74,8 @@ An attacker tampers with cookies to gain unauthorized access:
 - Go to Application → Cookies in DevTools
 - Replace the cookie value with the new hash
 - Reload the page to apply changes
+
+# References
+
+- OWASP CSRF
+- `https://www.airlock.com/en/glossary/cookie-tampering`
