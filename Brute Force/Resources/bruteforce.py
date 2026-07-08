@@ -11,7 +11,7 @@ import time
 import urllib.request
 import urllib.parse
 
-TARGET = "http://10.11.200.229/?page=signin"
+TARGET = "http://10.11.200.89/?page=signin"
 DEFAULT_WORDLIST = os.path.join(os.path.dirname(__file__), "wordlist.txt")
 USERNAMES = ["root", "admin", "administrator"]
 LOGIN_PARAMS = {"Login": "Login"}

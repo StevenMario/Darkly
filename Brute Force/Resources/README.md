@@ -5,7 +5,7 @@
 A brute force attack is a cybersecurity method where hackers use trial-and-error automation to systematically guess passwords, encryption keys, or login credentials. Instead of exploiting software vulnerabilities, attackers use computational power to guess thousands of combinations per minute until they find the right one
 
 ## How it works
-A vulnerable login page accepts authentication request without rate-limiting,account lockout , or CAPTCHAT. This allows an attacker to submit thousands of password attempts in rapid succession using a wordlist.
+A vulnerable login page accepts authentication request without rate-limiting, account lockout , or CAPTCHA. This allows an attacker to submit thousands of password attempts in rapid succession using a wordlist.
 
 
 
@@ -30,7 +30,7 @@ username=root&password=qwerty      → Access denied
 username=root&password=<match>     → Access granted ✅
 ```
 
-## Exploite the vulnerability
+## Exploit the vulnerability
 
 ### Vulnerable Page
 
@@ -43,31 +43,37 @@ A login form requiring a username and password.
 
 ** 1. Analyse the request **
 
-Install *Burp-Suite comunity edition* and open the page in the burpsuite browser.
-Go to the page and try to sigin with randomn value to see the request
+Open the browser and navigate to the sign-in page. Inspect the page and follow these steps:
 
-** 2. Write a brute-force script **
+- Open the Network tab in the browser developer tools.
+- Click the Submit button on the sign-in form.
+- Locate the network request triggered by the submission.
+- You should see the request shown in the screenshot below:
+
+![Request](./Screenshot%20from%202026-07-08%2014-56-22.png)
+
 
 Analyzing the request shows that the form submits via **GET**:
 
 ```
-GET /?page=signin&username=test&password=test&Login=Login
+GET /?page=signin&username=[username]&password=[p]&Login=Login
 ```
 
-No error message appears on failure — the server just re-renders the same login form. A successful login would return a different page (different HTML length, contains the flag).
+When wrong credentials are submitted, the server responds with an empty `<h2>` and a `WrongAnswer.gif` image. A successful login instead displays `The flag is : <hash>` with a `win.png` image.
+
+** 2. Write a brute-force script **
 
 The script `bruteforce.py` in this directory does the following:
 
-1. **Probe**: sends a request with obviously wrong credentials to record the failure response size (≈1990 bytes).
+1. **Probe**: sends a request with wrong credentials to capture the failure response.
 2. **Iterate**: loops over 3 usernames (`root`, `admin`, `administrator`) and 63 passwords from `wordlist.txt`.
-3. **Detect**: for each attempt, compares the response size against the failure baseline. Any response with a different length or containing the word "flag" is a match.
+3. **Detect**: compares each response length against the failure baseline; a different length or the presence of "flag" marks a success.
 4. **Report**: prints the valid credentials and the flag.
 
 Key observations from building the script:
 - The form uses `method="GET"`, not POST — parameters go in the URL.
 - Required parameters: `page=signin`, `username`, `password`, `Login=Login`.
 - No rate-limiting or CAPTCHA — the server accepts rapid sequential requests.
-- The failure response is always 1990 bytes; the success response is noticeably different.
 
 ** 3. Run the exploit **
 
@@ -85,10 +91,8 @@ $ python3 bruteforce.py
 
 The credentials are `root` / `shadow`. The flag is the 64-character SHA-256 hash displayed in the success response.
 
-## Mitigation
+## References
 
-- **Rate limiting**: limit the number of requests per IP per minute.
-- **Account lockout**: lock the account after N failed attempts.
-- **CAPTCHA**: require solving a CAPTCHA after a few failed logins.
-- **Strong password policy**: enforce minimum complexity to resist wordlist attacks.
+- [OWASP - Brute Force Attack](https://owasp.org/www-community/attacks/Brute_force_attack)
+- [CWE-307: Improper Restriction of Excessive Authentication Attempts](https://cwe.mitre.org/data/definitions/307.html)
 
